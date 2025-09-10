@@ -58,8 +58,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Use a transaction to ensure data integrity
         $conn->begin_transaction();
         try {
-            // 1. Insert into 'orders' table
-            $order_sql = "INSERT INTO orders (user_id, total_amount, order_status) VALUES (?, ?, 'Completed')";
+            // 1. Insert into 'orders' table (Status will now be 'Pending' by default)
+            $order_sql = "INSERT INTO orders (user_id, total_amount) VALUES (?, ?)";
             $stmt_order = $conn->prepare($order_sql);
             $stmt_order->bind_param("id", $user_id, $total_amount);
             $stmt_order->execute();
@@ -83,8 +83,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // If everything is successful, commit the transaction
             $conn->commit();
             
-            // Redirect to a success page or the main index
-            header("location: /index.php"); // You might want a dedicated success page
+            // Redirect to the order list page to see the new pending order
+            header("location: /view_orders.php");
             exit();
 
         } catch (Exception $e) {
@@ -207,3 +207,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </script>
 </body>
 </html>
+

@@ -2,8 +2,20 @@
 // Include the database configuration
 require_once 'config.php';
 
-// Fetch all orders, joining with the users table to get customer names
-$orders = [];
+// --- Fetch Statuses for Dropdown ---
+$statuses = [];
+$status_sql = "SELECT DISTINCT order_status FROM orders ORDER BY order_status";
+if ($status_result = $conn->query($status_sql)) {
+    while ($row = $status_result->fetch_assoc()) {
+        $statuses[] = $row['order_status'];
+    }
+}
+// --- END Fetch Statuses ---
+
+// --- Build the Search and Filter Query ---
+$search_term = isset($_GET['search']) ? trim($_GET['search']) : '';
+$filter_status = isset($_GET['status']) ? trim($_GET['status']) : '';
+
 $sql = "SELECT 
             o.id, 
             o.total_amount, 
@@ -12,14 +24,37 @@ $sql = "SELECT
             u.name as customer_name, 
             u.uid 
         FROM orders o
-        JOIN users u ON o.user_id = u.id
-        ORDER BY o.order_date DESC";
+        JOIN users u ON o.user_id = u.id";
+        
+$where_clauses = [];
+$params = [];
+$types = "";
 
-if ($result = $conn->query($sql)) {
-    while ($row = $result->fetch_assoc()) {
-        $orders[] = $row;
-    }
+if (!empty($search_term)) {
+    $where_clauses[] = "u.name LIKE ?";
+    $params[] = "%" . $search_term . "%";
+    $types .= "s";
 }
+if (!empty($filter_status)) {
+    $where_clauses[] = "o.order_status = ?";
+    $params[] = $filter_status;
+    $types .= "s";
+}
+
+if (!empty($where_clauses)) {
+    $sql .= " WHERE " . implode(" AND ", $where_clauses);
+}
+
+$sql .= " ORDER BY o.order_date DESC";
+
+$stmt = $conn->prepare($sql);
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
+$stmt->execute();
+$result = $stmt->get_result();
+$orders = $result->fetch_all(MYSQLI_ASSOC);
+// --- END Build Query ---
 ?>
 
 <!DOCTYPE html>
@@ -63,6 +98,31 @@ if ($result = $conn->query($sql)) {
             </a>
         </div>
 
+        <!-- Search and Filter Form -->
+        <div class="bg-white p-4 rounded-lg shadow-md mb-8">
+            <form action="/view_orders.php" method="get" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 items-center">
+                <div class="md:col-span-2 lg:col-span-2">
+                    <label for="search" class="sr-only">搜尋顧客</label>
+                    <input type="text" name="search" id="search" placeholder="依顧客名稱搜尋..." value="<?php echo htmlspecialchars($search_term); ?>" class="w-full border-gray-300 rounded-md shadow-sm">
+                </div>
+                <div>
+                    <label for="status" class="sr-only">狀態</label>
+                    <select name="status" id="status" class="w-full border-gray-300 rounded-md shadow-sm">
+                        <option value="">所有狀態</option>
+                        <?php foreach ($statuses as $stat): ?>
+                            <option value="<?php echo htmlspecialchars($stat); ?>" <?php if ($filter_status == $stat) echo 'selected'; ?>>
+                                <?php echo htmlspecialchars($stat); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                     <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-indigo-700">搜尋</button>
+                     <a href="/view_orders.php" class="w-full text-center bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-gray-300">重設</a>
+                </div>
+            </form>
+        </div>
+
         <div class="bg-white shadow-lg rounded-lg overflow-hidden">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
@@ -83,7 +143,17 @@ if ($result = $conn->query($sql)) {
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800"><?php echo htmlspecialchars($order['customer_name']); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$<?php echo htmlspecialchars($order['total_amount']); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        <?php 
+                                            switch($order['order_status']) {
+                                                case 'Completed': echo 'bg-green-100 text-green-800'; break;
+                                                case 'Shipped': echo 'bg-blue-100 text-blue-800'; break;
+                                                case 'Pending': echo 'bg-yellow-100 text-yellow-800'; break;
+                                                case 'Cancelled': echo 'bg-red-100 text-red-800'; break;
+                                                default: echo 'bg-gray-100 text-gray-800';
+                                            }
+                                        ?>
+                                    ">
                                         <?php echo htmlspecialchars($order['order_status']); ?>
                                     </span>
                                 </td>
@@ -95,7 +165,7 @@ if ($result = $conn->query($sql)) {
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="6" class="px-6 py-12 text-center text-sm text-gray-500">目前沒有任何訂單。</td>
+                            <td colspan="6" class="px-6 py-12 text-center text-sm text-gray-500">找不到符合條件的訂單。</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -104,3 +174,4 @@ if ($result = $conn->query($sql)) {
     </div>
 </body>
 </html>
+
