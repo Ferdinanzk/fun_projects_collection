@@ -150,6 +150,7 @@ $orders = $result->fetch_all(MYSQLI_ASSOC);
                                                 case 'Shipped': echo 'bg-blue-100 text-blue-800'; break;
                                                 case 'Pending': echo 'bg-yellow-100 text-yellow-800'; break;
                                                 case 'Cancelled': echo 'bg-red-100 text-red-800'; break;
+                                                case 'Processing': echo 'bg-purple-100 text-purple-800'; break;
                                                 default: echo 'bg-gray-100 text-gray-800';
                                             }
                                         ?>
@@ -159,7 +160,7 @@ $orders = $result->fetch_all(MYSQLI_ASSOC);
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?php echo $order['formatted_date']; ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <a href="#" class="text-indigo-600 hover:text-indigo-900">查看詳情</a>
+                                    <a href="/edit_order.php?id=<?php echo $order['id']; ?>" class="text-indigo-600 hover:text-indigo-900">查看詳情</a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

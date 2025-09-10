@@ -61,7 +61,8 @@ if ($stmt_items = $conn->prepare($items_sql)) {
 
 $conn->close();
 
-$possible_statuses = ['Pending', 'Processing', 'Shipped', 'Completed', 'Cancelled'];
+// --- Translated Statuses ---
+$possible_statuses = ['待處理', '處理中', '已出貨', '已完成', '已取消'];
 ?>
 
 <!DOCTYPE html>
@@ -152,3 +153,4 @@ $possible_statuses = ['Pending', 'Processing', 'Shipped', 'Completed', 'Cancelle
     </div>
 </body>
 </html>
+
