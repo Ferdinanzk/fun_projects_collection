@@ -1,9 +1,8 @@
 <?php
 // Include your database configuration
 require_once 'config.php';
-// Include the Composer autoloader to use the AWS SDK.
-// The path goes up one level from 'api' to the root where the 'vendor' folder is.
-require_once __DIR__ . '/../vendor/autoload.php';
+// Corrected Path: Include the Composer autoloader from the SAME directory.
+require_once __DIR__ . '/vendor/autoload.php';
 
 // Import the necessary classes from the AWS SDK
 use Aws\S3\S3Client;
@@ -181,5 +180,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </div>
 </body>
 </html>
-
 
