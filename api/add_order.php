@@ -6,7 +6,7 @@ require_once 'config.php';
 
 // Fetch all users for the customer dropdown
 $users = [];
-$user_sql = "SELECT id, name, uid FROM users ORDER BY name";
+$user_sql = "SELECT id, name FROM users ORDER BY name";
 if ($user_result = $conn->query($user_sql)) {
     while ($row = $user_result->fetch_assoc()) {
         $users[] = $row;
@@ -161,7 +161,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                          <select name="user_id" id="user_id" required class="w-full md:w-2/3 border-gray-300 rounded-md shadow-sm text-base">
                             <option value="">-- 請選擇一位顧客 --</option>
                             <?php foreach ($users as $user): ?>
-                                <option value="<?php echo $user['id']; ?>"><?php echo htmlspecialchars($user['name']); ?> (<?php echo htmlspecialchars($user['uid']); ?>)</option>
+                                <option value="<?php echo $user['id']; ?>"><?php echo htmlspecialchars($user['name']); ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
