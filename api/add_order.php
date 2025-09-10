@@ -180,12 +180,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </select>
                         </form>
                         <!-- Product Grid -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto pr-2">
+                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 max-h-[60vh] overflow-y-auto pr-2">
                              <?php foreach ($products as $product): ?>
-                                <div class="product-card border rounded-lg p-4 flex flex-col items-start cursor-pointer" onclick="addToCart(<?php echo htmlspecialchars(json_encode($product)); ?>)">
-                                    <h3 class="font-bold text-gray-800"><?php echo htmlspecialchars($product['product_name']); ?></h3>
-                                    <p class="text-sm text-gray-500"><?php echo htmlspecialchars($product['category']); ?></p>
-                                    <p class="mt-auto text-lg font-semibold text-indigo-600">$<?php echo htmlspecialchars($product['price']); ?></p>
+                                <div class="product-card border rounded-lg p-3 flex flex-col items-start cursor-pointer" onclick="addToCart(<?php echo htmlspecialchars(json_encode($product)); ?>)">
+                                    <h3 class="font-semibold text-sm text-gray-800"><?php echo htmlspecialchars($product['product_name']); ?></h3>
+                                    <p class="text-xs text-gray-500"><?php echo htmlspecialchars($product['category']); ?></p>
+                                    <p class="mt-auto text-base font-bold text-indigo-600">$<?php echo htmlspecialchars($product['price']); ?></p>
                                 </div>
                             <?php endforeach; ?>
                             <?php if(empty($products)): ?>
