@@ -70,9 +70,9 @@ $result = $stmt->get_result();
                 </a>
                 <div class="hidden md:block">
                     <div class="ml-10 flex items-baseline space-x-4">
-                        <a href="/index.php" class="bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium">首頁</a>
-                        <a href="#" class="text-gray-500 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium">關於</a>
-                        <a href="#" class="text-gray-500 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium">聯絡我們</a>
+                        <a href="/index.php" class="text-gray-500 hover:bg-indigo-100 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">產品管理</a>
+                        <a href="/view_orders.php" class="text-gray-500 hover:bg-indigo-100 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">訂單管理</a>
+                        <a href="/add_order.php" class="bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">新增訂單</a>
                     </div>
                 </div>
             </div>
@@ -130,7 +130,6 @@ $result = $stmt->get_result();
                         <div class="p-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-2">
                              <a href="/edit_product.php?id=<?php echo $row['id']; ?>" class="text-indigo-600 hover:text-indigo-900 font-medium">編輯</a>
                             <span class="text-gray-300">|</span>
-                            <!-- CORRECTED DELETE FORM -->
                             <form action="/delete_product.php" method="post" onsubmit="return confirm('您確定要刪除此產品嗎？');" class="inline">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <button type="submit" class="text-red-600 hover:text-red-900 font-medium">刪除</button>
