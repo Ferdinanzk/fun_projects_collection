@@ -1,21 +1,18 @@
 {
   "functions": {
-    "api/**/*.php": {
-      "runtime": "vercel-php@0.7.4"
+    "api/*.php": {
+      "runtime": "vercel-php@0.7.4",
+      "memory": 1024
     }
   },
   "routes": [
     {
-      "src": "/(images|logo\\.png)(.*)",
-      "dest": "/$1$2"
+      "src": "/(logo\\.png)",
+      "dest": "/$1"
     },
     {
-      "src": "/(.*\\.php)",
+      "src": "/(.*)",
       "dest": "/api/$1"
-    },
-    {
-      "src": "/",
-      "dest": "/api/index.php"
     }
   ]
 }
