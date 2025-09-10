@@ -1,14 +1,39 @@
 <?php
-// Include the configuration file, located in the same 'api' directory.
+// Include your database configuration
 require_once 'config.php';
+// Include the Composer autoloader to use the AWS SDK
+require_once __DIR__ . '/vendor/autoload.php';
 
-// Check if the ID parameter is set and is not empty
-if (isset($_GET["id"]) && !empty(trim($_GET["id"]))) {
-    // Get the product ID from the URL
-    $id = trim($_GET["id"]);
+// Import the necessary classes from the AWS SDK
+use Aws\S3\S3Client;
+use Aws\Exception\AwsException;
 
-    // --- Step 1: Get the image path before deleting the record ---
-    $image_path = '';
+// --- S3 CLIENT SETUP ---
+$s3Client = null;
+if (getenv('S3_BUCKET_NAME')) {
+    try {
+        $s3Client = new S3Client([
+            'version'     => 'latest',
+            'region'      => getenv('AWS_REGION'),
+            'credentials' => [
+                'key'    => getenv('AWS_ACCESS_KEY_ID'),
+                'secret' => getenv('AWS_SECRET_ACCESS_KEY'),
+            ],
+        ]);
+    } catch (Exception $e) {
+        // Stop execution if S3 client fails to initialize
+        die("Error creating S3 Client: " . $e->getMessage());
+    }
+}
+// --- END S3 CLIENT SETUP ---
+
+
+// Process delete operation only if ID is present
+if (isset($_POST["id"]) && !empty($_POST["id"])) {
+    $id = trim($_POST["id"]);
+    $image_url_to_delete = "";
+
+    // First, get the image URL from the database
     $sql_select = "SELECT image FROM products WHERE id = ?";
     if ($stmt_select = $conn->prepare($sql_select)) {
         $stmt_select->bind_param("i", $id);
@@ -16,42 +41,59 @@ if (isset($_GET["id"]) && !empty(trim($_GET["id"]))) {
             $result = $stmt_select->get_result();
             if ($result->num_rows == 1) {
                 $row = $result->fetch_assoc();
-                $image_path = $row['image'];
+                $image_url_to_delete = $row['image'];
             }
+        } else {
+            die("Error fetching product data.");
         }
         $stmt_select->close();
     }
 
-    // --- Step 2: Prepare a delete statement for the database record ---
+    // --- DELETE OBJECT FROM S3 ---
+    if (!empty($image_url_to_delete) && $s3Client) {
+        try {
+            $bucket = getenv('S3_BUCKET_NAME');
+            // Extract the key (path/filename) from the full URL
+            $key = parse_url($image_url_to_delete, PHP_URL_PATH);
+            // The key might have a leading slash, which should be removed
+            $key = ltrim($key, '/');
+
+            if (!empty($key)) {
+                $s3Client->deleteObject([
+                    'Bucket' => $bucket,
+                    'Key'    => $key,
+                ]);
+            }
+        } catch (AwsException $e) {
+            // Log the error but don't stop the script.
+            // We still want to delete the database record even if S3 fails.
+            error_log("Error deleting S3 object: " . $e->getMessage());
+        }
+    }
+    // --- END S3 DELETE ---
+
+    // Now, delete the record from the database
     $sql_delete = "DELETE FROM products WHERE id = ?";
     if ($stmt_delete = $conn->prepare($sql_delete)) {
-        // Bind variables to the prepared statement as parameters
         $stmt_delete->bind_param("i", $id);
-
-        // Attempt to execute the prepared statement
         if ($stmt_delete->execute()) {
-            // --- Step 3: If database deletion is successful, delete the image file ---
-            // The path in the DB is like '/images/file.jpg', so we need to go to the parent dir `..`
-            if (!empty($image_path) && file_exists(".." . $image_path)) {
-                unlink(".." . $image_path);
-            }
-            
-            // Product deleted successfully. Redirect to the main page.
+            // Records deleted successfully. Redirect to landing page.
             header("location: /index.php");
             exit();
         } else {
-            echo "哎呀！刪除時發生錯誤。請稍後再試。";
+            echo "Oops! Something went wrong. Please try again later.";
         }
         $stmt_delete->close();
     }
-    
-    // Close connection
     $conn->close();
 
 } else {
-    // If ID is not present in URL, redirect to the main page
-    header("location: /index.php");
-    exit();
+    // Check if ID parameter is missing
+    if (empty(trim($_GET["id"]))) {
+        // URL doesn't contain id parameter. Redirect to error page or index.
+        header("location: /index.php");
+        exit();
+    }
 }
 ?>
 
